@@ -31,6 +31,23 @@ RUN usermod -u 1000 ${WEB_USER} \
  && groupmod -g 1000 ${WEB_GROUP} \
  && chgrp -R staff ${PHP_ROOT_DIR}/php-fpm.d/www.conf
 
+# vue-cli 설정
+ENV HOME /root
+ENV NVM_DIR $HOME/.nvm
+ENV NODE_VERSION 12.14.1
+
+# Install nvm with node and npm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash \
+    && . $NVM_DIR/nvm.sh \
+    && nvm install $NODE_VERSION \
+    && nvm alias default $NODE_VERSION \
+    && nvm use default \
+    && npm install -g yarn
+
+ENV NODE_PATH $NVM_DIR/versions/node/v$NODE_VERSION/lib/node_modules
+ENV PATH      $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+
+
 # mysql, php-fpm port 외부 노출
 EXPOSE 9000
 EXPOSE 8090
