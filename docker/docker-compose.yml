@@ -1,0 +1,65 @@
+version: "3.2"
+services: 
+    apache:
+      container_name: ${PROJECT_NAME}_apache
+      build: 
+        context: ./apache
+        dockerfile: Dockerfile
+        args:
+          - WEB_USER=${WEB_USER}
+          - WEB_GROUP=${WEB_GROUP}
+          - APACHE_ROOT_DIR=${APACHE_ROOT_DIR}
+          - PROJECT_DOCUMENT_ROOT=${PROJECT_DOCUMENT_ROOT}
+      volumes: 
+        - ./logs:/usr/local/apache2/logs
+        - ../app:${PROJECT_DOCUMENT_ROOT}
+      ports:
+        - "9999:80"
+      depends_on: 
+        - php
+      environment: 
+        - APACHE_ROOT_DIR=${APACHE_ROOT_DIR}
+        - WEB_USER=${WEB_USER}
+        - WEB_GROUP=${WEB_GROUP}
+    php:
+      container_name: ${PROJECT_NAME}_php
+      build: 
+        context: ./php
+        dockerfile: Dockerfile
+        args:
+          - WEB_USER=${WEB_USER}
+          - WEB_GROUP=${WEB_GROUP}
+          - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+          - PROJECT_DOCUMENT_ROOT=${PROJECT_DOCUMENT_ROOT}
+      working_dir: ${PROJECT_DOCUMENT_ROOT}
+      ports: 
+        - "9090:9000"
+        - "8090"
+      volumes:
+      - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+      - ../app:${PROJECT_DOCUMENT_ROOT}
+      environment: 
+        - WEB_USER=${WEB_USER}
+        - WEB_GROUP=${WEB_GROUP}
+        - PHP_ROOT_DIR=${PHP_ROOT_DIR}
+        - PROJECT_DOCUMENT_ROOT=${PROJECT_DOCUMENT_ROOT}
+    db:
+      container_name: ${PROJECT_NAME}_db
+      build: 
+        context: ./mysql
+        dockerfile: Dockerfile
+        args: 
+          - MYSQL_CONTAINER_USER=${MYSQL_CONTAINER_USER}
+          - MYSQL_CONTAINER_GROUP=${MYSQL_CONTAINER_GROUP}
+      command: 
+        --default-authentication-plugin=mysql_native_password
+      ports:
+        - "${HOST_MYSQL_PORT}:${CONTAINER_MYSQL_PORT}"
+      volumes: 
+        - "${MYSQL_DATA_PATH}:/var/lib/mysql:delegated"
+        - "${MYSQL_ENV_CONF_PATH}:/etc/mysql/conf.d"
+      environment: 
+        - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+        - MYSQL_HOST=${MYSQL_HOST}
+
